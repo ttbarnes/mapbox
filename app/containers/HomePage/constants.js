@@ -10,3 +10,5 @@
  */
 
 export const CHANGE_USERNAME = 'boilerplate/Home/CHANGE_USERNAME';
+
+export const COUNTRY_SELECTED = 'COUNTRY_SELECTED';

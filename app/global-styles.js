@@ -24,7 +24,30 @@ injectGlobal`
 
   p,
   label {
-    font-family: Georgia, Times, 'Times New Roman', serif;
     line-height: 1.5em;
   }
+  .mapboxgl-missing-css{
+    display: none;
+  }
+
+  label,
+  input[type="checkbox"] {
+    cursor: pointer;
+  }
+
+  label {
+    display: flex;
+    align-items: center;
+    margin: 0.5em 0;
+    font-size: .8em;
+  }
+  input {
+    margin-right: 0.5em;
+  }
+
+  .filter-label {
+    font-weight: bold;
+    text-decoration: underline;
+  }
+
 `;

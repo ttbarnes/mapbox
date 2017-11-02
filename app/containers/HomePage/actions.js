@@ -17,6 +17,7 @@
 
 import {
   CHANGE_USERNAME,
+  COUNTRY_SELECTED,
 } from './constants';
 
 /**
@@ -32,3 +33,12 @@ export function changeUsername(name) {
     name,
   };
 }
+
+
+export function countrySelected(name) {
+  return {
+    type: COUNTRY_SELECTED,
+    name
+  }
+}
+

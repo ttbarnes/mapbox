@@ -11,9 +11,11 @@
  */
 
 import dataEurope from '../../data/europe.json';
+import { COUNTRIES_EUROPE } from '../../data/countries';
 
 import {
   CHANGE_USERNAME,
+  COUNTRY_SELECTED,
 } from './constants';
 
 // The initial state of the App
@@ -22,15 +24,17 @@ const initialState = {
   continents: {
     europe: dataEurope.features
   },
-  selectedCountry: 'Poland'
+  europeCountriesList: COUNTRIES_EUROPE,
+  selectedCountries: []
 }
 
 function homeReducer(state = initialState, action) {
   switch (action.type) {
-    case CHANGE_USERNAME:
-      return Object.assign({}, state, {
-        username: action.name.replace(/@/gi, '')
-      });
+    case COUNTRY_SELECTED:
+      return {
+        ...state,
+        selectedCountries: [...state.selectedCountries, action.name]
+      };
     default:
       return state;
   }

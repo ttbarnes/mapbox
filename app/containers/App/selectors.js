@@ -4,9 +4,14 @@
 
 import { createSelector } from 'reselect';
 
-const selectHome = (state) => state.home;
+const selectHome = (state) => state && state.home || {};
 
-const selectEurope = (state) => state && state.home.continents;
+const selectEurope = (state) => state.home.continents;
+
+const selectEuropeCountriesList = () => createSelector(
+  selectHome,
+  (homeState) => homeState.europeCountriesList
+);
 
 const makeSelectContinents = () => createSelector(
   selectHome,
@@ -15,7 +20,7 @@ const makeSelectContinents = () => createSelector(
 
 const makeSelectEurope = () => createSelector(
   selectHome,
-  (homeState) => homeState && homeState.continents
+  (homeState) => homeState && homeState.continents.europe
 )
 
 const makeSelectEuropeCountries = () => createSelector(
@@ -23,14 +28,15 @@ const makeSelectEuropeCountries = () => createSelector(
   (europeState) => europeState.features
 )
 
-const selectSelectedCountry = (state) => state.home.selectedCountry;
+const selectSelectedCountries = (state) => state.home.selectedCountries;
 
 const makeSelectEuropeCountryCords = () => createSelector(
   selectHome,
-  selectSelectedCountry,
-  (homeState, selectedCountry) => () => {
+  selectSelectedCountries,
+  (homeState, selectedCountries) => () => {
+    const lastSelectedCountry = selectedCountries[selectedCountries.length - 1];
     return homeState.continents.europe.find((country) => {
-      if (country.properties.name_long === selectedCountry) {
+      if (country.properties.name_long === lastSelectedCountry) {
         return country;
       }
     });
@@ -38,6 +44,7 @@ const makeSelectEuropeCountryCords = () => createSelector(
 )
 
 export {
+  selectEuropeCountriesList,
   makeSelectContinents,
   makeSelectEurope,
   makeSelectEuropeCountryCords
