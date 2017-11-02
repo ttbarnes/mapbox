@@ -4,40 +4,41 @@
 
 import { createSelector } from 'reselect';
 
-const selectGlobal = (state) => state.get('global');
+const selectHome = (state) => state.home;
 
-const selectRoute = (state) => state.get('route');
+const selectEurope = (state) => state && state.home.continents;
 
-const makeSelectCurrentUser = () => createSelector(
-  selectGlobal,
-  (globalState) => globalState.get('currentUser')
-);
+const makeSelectContinents = () => createSelector(
+  selectHome,
+  (homeState) => homeState.continents
+)
 
-const makeSelectLoading = () => createSelector(
-  selectGlobal,
-  (globalState) => globalState.get('loading')
-);
+const makeSelectEurope = () => createSelector(
+  selectHome,
+  (homeState) => homeState && homeState.continents
+)
 
-const makeSelectError = () => createSelector(
-  selectGlobal,
-  (globalState) => globalState.get('error')
-);
+const makeSelectEuropeCountries = () => createSelector(
+  makeSelectEurope,
+  (europeState) => europeState.features
+)
 
-const makeSelectRepos = () => createSelector(
-  selectGlobal,
-  (globalState) => globalState.getIn(['userData', 'repositories'])
-);
+const selectSelectedCountry = (state) => state.home.selectedCountry;
 
-const makeSelectLocation = () => createSelector(
-  selectRoute,
-  (routeState) => routeState.get('location').toJS()
-);
+const makeSelectEuropeCountryCords = () => createSelector(
+  selectHome,
+  selectSelectedCountry,
+  (homeState, selectedCountry) => () => {
+    return homeState.continents.europe.find((country) => {
+      if (country.properties.name_long === selectedCountry) {
+        return country;
+      }
+    });
+  }
+)
 
 export {
-  selectGlobal,
-  makeSelectCurrentUser,
-  makeSelectLoading,
-  makeSelectError,
-  makeSelectRepos,
-  makeSelectLocation,
+  makeSelectContinents,
+  makeSelectEurope,
+  makeSelectEuropeCountryCords
 };
