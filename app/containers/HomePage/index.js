@@ -20,7 +20,7 @@ import {
   selectEuropeCountriesList
 } from 'containers/App/selectors';
 
-import ReactMapboxGl, { Layer, Feature, GeoJSONLayer, Source } from 'react-mapbox-gl';
+import ReactMapboxGl, { Layer, Feature } from 'react-mapbox-gl';
 
 import { countrySelected } from './actions';
 import reducer from './reducer';
@@ -28,7 +28,6 @@ import saga from './saga';
 
 const accessToken = 'pk.eyJ1IjoidHRiYXJuZXMiLCJhIjoiY2o5aG96czd3MzVkcjMzcHlmN3Y2dHA4ZyJ9.3YyzhYPeosdM3D8C4JxmiQ';
 const Map = ReactMapboxGl({ accessToken });
-const zoom = [3.5];
 
 const polygonPaint = {
   'fill-color': '#6F788A',
@@ -36,7 +35,7 @@ const polygonPaint = {
 };
 
 const polygonPaintDisabled = {
-  'fill-opacity': 0.2
+  'fill-opacity': 0
 };
 
 export class HomePage extends React.PureComponent { // eslint-disable-line react/prefer-stateless-function
@@ -44,8 +43,17 @@ export class HomePage extends React.PureComponent { // eslint-disable-line react
   constructor(props) {
     super(props);
     this.state = {
-      selectedCountries: []
+      selectedCountries: [],
+      zoom: [3.5],
+      center: [-5.661948614921897, 54.55460317648385] // europe first coords
     }
+  }
+
+  changeCenter = (value) => {
+    this.setState({
+      center: value,
+      zoom: [5]
+    });
   }
 
   countryIsInSelectedList = (countryName) => this.state.selectedCountries.includes(countryName);
@@ -87,9 +95,11 @@ export class HomePage extends React.PureComponent { // eslint-disable-line react
     return result;
   }
 
+  doClickStuff = (ev) => this.changeCenter(ev.lngLat);
+
   render() {
     const { loading, error, repos, europeData, europeCountriesList } = this.props;
-    const { selectedCountries } = this.state;
+    const { selectedCountries, zoom, center } = this.state;
 
     return (
       <div>
@@ -113,6 +123,7 @@ export class HomePage extends React.PureComponent { // eslint-disable-line react
             <Map
               style='mapbox://styles/mapbox/streets-v8'
               zoom={zoom}
+              center={center}
               containerStyle={{
                 height: '100vh',
                 width: '100%'
@@ -134,7 +145,11 @@ export class HomePage extends React.PureComponent { // eslint-disable-line react
                   paint={countryIsChecked ? polygonPaint : polygonPaintDisabled}
                   key={countryLongName}
                 >
-                  <Feature coordinates={country.geometry.coordinates} />
+                  <Feature
+                    coordinates={country.geometry.coordinates}
+                    onClick={this.doClickStuff}
+                  />
+
                 </Layer>
               )
             })}
