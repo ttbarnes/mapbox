@@ -8,9 +8,9 @@ const selectHome = (state) => state && state.home || {};
 
 const selectEurope = (state) => state.home.continents;
 
-const selectEuropeCountriesList = () => createSelector(
+const selectEuropeCountriesStatesList = () => createSelector(
   selectHome,
-  (homeState) => homeState.europeCountriesList
+  (homeState) => homeState.europeCountriesStatesList
 );
 
 const makeSelectContinents = () => createSelector(
@@ -26,6 +26,11 @@ const makeSelectEurope = () => createSelector(
 const makeSelectEuropeCountries = () => createSelector(
   makeSelectEurope,
   (europeState) => europeState.features
+)
+
+const selectUkCountiesList = () => createSelector(
+  selectHome,
+  (homeState) => homeState.ukCounties
 )
 
 const selectSelectedCountries = (state) => state.home.selectedCountries;
@@ -44,8 +49,9 @@ const makeSelectEuropeCountryCords = () => createSelector(
 )
 
 export {
-  selectEuropeCountriesList,
+  selectEuropeCountriesStatesList,
   makeSelectContinents,
   makeSelectEurope,
-  makeSelectEuropeCountryCords
+  makeSelectEuropeCountryCords,
+  selectUkCountiesList
 };

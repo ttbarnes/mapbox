@@ -17,7 +17,8 @@ import {
   makeSelectEurope,
   makeSelectContinents,
   makeSelectEuropeCountryCords,
-  selectEuropeCountriesList
+  selectEuropeCountriesStatesList,
+  selectUkCountiesList
 } from 'containers/App/selectors';
 
 import ReactMapboxGl, { Layer, Feature } from 'react-mapbox-gl';
@@ -30,13 +31,23 @@ const accessToken = 'pk.eyJ1IjoidHRiYXJuZXMiLCJhIjoiY2o5aG96czd3MzVkcjMzcHlmN3Y2
 const Map = ReactMapboxGl({ accessToken });
 
 const polygonPaint = {
-  'fill-color': '#6F788A',
+  'fill-color': '#bcda2c',
+  'fill-opacity': 0.7
+};
+
+const polygonPaintCounty = {
+  'fill-color': '#000',
   'fill-opacity': 1
 };
 
 const polygonPaintDisabled = {
   'fill-opacity': 0
 };
+
+const labelSelectedStyle = {
+  fontWeight: 'bold'
+}
+
 
 export class HomePage extends React.PureComponent { // eslint-disable-line react/prefer-stateless-function
 
@@ -97,8 +108,10 @@ export class HomePage extends React.PureComponent { // eslint-disable-line react
 
   doClickStuff = (ev) => this.changeCenter(ev.lngLat);
 
+  onCountyClick = (ev) => console.log('----clicked on the county ', ev.feature.properties.name);
+
   render() {
-    const { loading, error, repos, europeData, europeCountriesList } = this.props;
+    const { loading, error, repos, europeData, europeCountriesStatesList, ukCounties } = this.props;
     const { selectedCountries, zoom, center } = this.state;
 
     return (
@@ -110,18 +123,29 @@ export class HomePage extends React.PureComponent { // eslint-disable-line react
             <h2>Map things</h2>
             <br />
             <p className="filter-label">Countries</p>
-            {europeCountriesList.map((c) =>
-              <div key={c}>
-                <label>
-                  <input type='checkbox' name={c} onChange={this.handleOnChange.bind(this)} /> {c}
+            {europeCountriesStatesList.map((c) =>
+              <div key={c.name}>
+                <label style={selectedCountries.includes(c.name) ? labelSelectedStyle : {}}>
+                  <input type='checkbox' name={c.name} onChange={this.handleOnChange.bind(this)} /> {c.name}
                 </label>
+                {selectedCountries.includes(c.name) &&
+                  <div style={{ marginLeft: '1em' }}>
+                    {(c.states && c.states.length) && c.states.map((state) =>
+                      <div key={state}>
+                        <label>
+                          <input type='checkbox' name={state} onChange={this.handleOnChange.bind(this)} /> {state}
+                        </label>
+                      </div> 
+                    )}
+                  </div>
+                }
               </div>
             )}
           </div>
 
           <div style={{width: '80%'}}>
             <Map
-              style='mapbox://styles/mapbox/streets-v8'
+              style='mapbox://styles/mapbox/streets-v9'
               zoom={zoom}
               center={center}
               containerStyle={{
@@ -136,7 +160,8 @@ export class HomePage extends React.PureComponent { // eslint-disable-line react
               }}
             >
             
-            {europeData.map((country) => {
+            {
+            europeData.map((country) => {
               const countryLongName = country.properties.name_long;
               const countryIsChecked = this.countryIsInSelectedList(countryLongName);
               return (
@@ -148,6 +173,24 @@ export class HomePage extends React.PureComponent { // eslint-disable-line react
                   <Feature
                     coordinates={country.geometry.coordinates}
                     onClick={this.doClickStuff}
+                  />
+
+                </Layer>
+              )
+            })
+          }
+
+            {ukCounties.map((county) => {
+              return (
+                <Layer
+                  type="fill"
+                  paint={polygonPaintCounty}
+                  key={county.name}
+                >
+                  <Feature
+                    coordinates={county.geometry.coordinates[0]}
+                    properties={county.properties}
+                    onClick={this.onCountyClick}
                   />
 
                 </Layer>
@@ -188,7 +231,8 @@ const mapStateToProps = createStructuredSelector({
   geoJsonData: makeSelectContinents(),
   europeData: makeSelectEurope(),
   getEuropeCountryCoords: makeSelectEuropeCountryCords(),
-  europeCountriesList: selectEuropeCountriesList()
+  europeCountriesStatesList: selectEuropeCountriesStatesList(),
+  ukCounties: selectUkCountiesList(),
 });
 
 const withConnect = connect(mapStateToProps, mapDispatchToProps);

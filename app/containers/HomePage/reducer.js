@@ -11,7 +11,8 @@
  */
 
 import dataEurope from '../../data/europe.json';
-import { COUNTRIES_EUROPE } from '../../data/countries';
+import { COUNTRIES_AND_STATES_EUROPE } from '../../data/countries-states-europe';
+import { COUNTIES_UK } from '../../data/uk-counties';
 
 import {
   CHANGE_USERNAME,
@@ -24,7 +25,8 @@ const initialState = {
   continents: {
     europe: dataEurope.features
   },
-  europeCountriesList: COUNTRIES_EUROPE,
+  europeCountriesStatesList: COUNTRIES_AND_STATES_EUROPE,
+  ukCounties: COUNTIES_UK,
   selectedCountries: []
 }
 
