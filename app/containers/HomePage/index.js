@@ -29,6 +29,8 @@ import saga from './saga';
 
 const accessToken = 'pk.eyJ1IjoidHRiYXJuZXMiLCJhIjoiY2o5aG96czd3MzVkcjMzcHlmN3Y2dHA4ZyJ9.3YyzhYPeosdM3D8C4JxmiQ';
 const Map = ReactMapboxGl({ accessToken });
+const ZOOM_INIT = 3.5;
+const ZOOM_COUNTRY = 4;
 
 const polygonPaint = {
   'fill-color': '#bcda2c',
@@ -55,7 +57,7 @@ export class HomePage extends React.PureComponent { // eslint-disable-line react
     super(props);
     this.state = {
       selectedCountries: [],
-      zoom: [3.5],
+      zoom: [ZOOM_INIT],
       center: [-5.661948614921897, 54.55460317648385] // europe first coords
     }
   }
@@ -63,21 +65,26 @@ export class HomePage extends React.PureComponent { // eslint-disable-line react
   changeCenter = (value) => {
     this.setState({
       center: value,
-      zoom: [5]
+      zoom: [ZOOM_COUNTRY] 
     });
   }
 
   countryIsInSelectedList = (countryName) => this.state.selectedCountries.find((c) => c.name === countryName);
 
-  countryStateIsInSelectedList = (countryName, stateName) => {
-    const country = this.state.selectedCountries.find((c) => countryName === countryName);
-    const countryStateIsSelected = country.states && country.states.includes(stateName);
-    return countryStateIsSelected;
+  countryStateIsInSelectedList = (countryStateName) => {
+    const selectedCountries = this.state.selectedCountries;
+    const result = selectedCountries.map((country) =>
+      country.states.filter(s => s.name === countryStateName)
+    );
+    // todo: clean.
+    const filteredResult = result[0] && result[0][0] && result[0][0].name;
+    if (filteredResult) {
+      return true;
+    }
+    return false;
   }
 
-  handleOnChangeCountry = (ev) => {
-    const { name, checked } = ev.target;
-
+  handleOnChangeCountry = (name) => {
     this.props.onSelectCountry(name);
 
     const selectedCountries = this.state.selectedCountries;
@@ -86,54 +93,67 @@ export class HomePage extends React.PureComponent { // eslint-disable-line react
       name,
       states: []
     }];
+
     this.setState({
       selectedCountries: [...this.state.selectedCountries, ...newSelectedCountry]
     });
   }
 
-  handleOnChangeCountryState(ev) {
-    const { name, checked, attributes } = ev.target;
-    const countryName = attributes['data-country-name'].value;
-    const _stateName = name;
+  changeSelectedCountriesAndStates(countryName, stateName) {
     const selectedCountries = this.state.selectedCountries;
     const countiesCountry = selectedCountries.find((c) => c.name === countryName);
     const newState = [
       {
-        name: _stateName
+        name: stateName
       }
     ];
-    const newStatesObj = [
-      ...countiesCountry.states,
-      ...newState
-    ];
+    
+    let newStatesObj = [];
+    if (countiesCountry.states) {
+      newStatesObj = [
+        ...countiesCountry.states,
+        ...newState
+      ];
+    } else {
+      newStatesObj = [
+        ...newState
+      ];
+    }
 
     countiesCountry.states = newStatesObj;
-    const selectedCountriesWithoutNewCountry = this.state.selectedCountries.filter((c) => c.name !== countiesCountry.name);
+    const selectedCountriesWithoutNewCountry = selectedCountries.filter((c) => c.name !== countiesCountry.name);
     this.setState({
-      selectedCountries: [...selectedCountriesWithoutNewCountry, countiesCountry ]
+      selectedCountries: [...selectedCountriesWithoutNewCountry, countiesCountry]
     });
   }
 
-  selectedCountriesWithGeo() {
-    const result = [];
-    const lastSelectedCountry = this.state.selectedCountries[this.state.selectedCountries.length - 1];
-    if (lastSelectedCountry) {
-      const countryWithCords = this.props.getEuropeCountryCoords(lastSelectedCountry.name); 
-      result.push(countryWithCords);
-    }
-    return result;
+  handleOnCheckboxChangeCountryState(ev) {
+    const { name, checked, attributes } = ev.target;
+    const countryName = attributes['data-country-name'].value;
+    const _stateName = name;
+    this.changeSelectedCountriesAndStates(countryName, _stateName);
   }
 
-  onCountryClick = (ev) => this.changeCenter(ev.lngLat);
+  handleMapOnChangeCountryState(ev) {
+    const countryStateName = ev.feature.properties.name;
+    this.changeSelectedCountriesAndStates('United Kingdom', countryStateName);
+  }
 
-  onCountyClick = (ev) => {
-    const stateName = ev.feature.properties.name;
-    this.handleOnChangeCountryState(stateName);
+  onMapCountryClick = (ev) => {
+    const { lngLat } = ev.target;
+    const { name_long } = ev.feature.properties;
+    // this.changeCenter(ev.lngLat);  // disabled for now
+    this.handleOnChangeCountry(name_long);
+  }
+
+  doMapHandleOnChangeCountry = (name) => {
+    this.handleOnChangeCountry(name);
   }
 
   render() {
     const { loading, error, repos, europeData, europeCountriesStatesList, ukCounties } = this.props;
     const { selectedCountries, zoom, center } = this.state;
+
     return (
       <div>
 
@@ -143,32 +163,43 @@ export class HomePage extends React.PureComponent { // eslint-disable-line react
             <h2>Map things</h2>
             <br />
             <p className="filter-label">Countries</p>
-            {europeCountriesStatesList.map((c) =>
-              <div key={c.name}>
-                <label style={selectedCountries.find((country) => country.name === c.name) ? labelSelectedStyle : {}}>
-                  <input type='checkbox' name={c.name} onChange={this.handleOnChangeCountry.bind(this)} /> {c.name}
-                </label>
-                {selectedCountries.find((country) => country.name === c.name) &&
-                  <div style={{ marginLeft: '1em' }}>
-                    {(c.states && c.states.length) && c.states.map((state) => {
-                      return (
-                        <div key={`${c.name}-${state.name}`}>
-                          <label>
-                            <input
-                              type='checkbox'
-                              name={state.name}
-                              data-country-name={c.name}
-                              onChange={this.handleOnChangeCountryState.bind(this)}
-                            /> {state.name}
-                          </label>
-                        </div> 
-                      );
-                    }
-                    )}
-                  </div>
-                }
-              </div>
-            )}
+            {europeCountriesStatesList.map((c) => {
+              const countryIsChecked = selectedCountries.find((country) => country.name === c.name);
+              const countryIsCheckedStyle = countryIsChecked ? labelSelectedStyle : {};
+
+              return (
+                <div key={c.name}>
+                  <label style={countryIsCheckedStyle}>
+                    <input
+                      type='checkbox'
+                      name={c.name}
+                      onChange={() => this.doMapHandleOnChangeCountry(c.name)}
+                    /> {c.name}
+                  </label>
+                  {selectedCountries.find((country) => country.name === c.name) &&
+                    <div style={{ marginLeft: '1em' }}>
+                      {(c.states && c.states.length) && c.states.map((state) => {
+                        const countyIsChecked = this.countryStateIsInSelectedList(state.name);
+                        return (
+                          <div key={`${c.name}-${state.name}`}>
+                            <label style={countyIsChecked ? labelSelectedStyle : {}}>
+                              <input
+                                type='checkbox'
+                                name={state.name}
+                                data-country-name={c.name}
+                                checked={countyIsChecked}
+                                onChange={this.handleOnCheckboxChangeCountryState.bind(this)}
+                              /> {state.name}
+                            </label>
+                          </div> 
+                        );
+                      }
+                      )}
+                    </div>
+                  }
+                </div>
+              )
+            })}
           </div>
 
           <div style={{width: '80%'}}>
@@ -178,7 +209,8 @@ export class HomePage extends React.PureComponent { // eslint-disable-line react
               center={center}
               containerStyle={{
                 height: '100vh',
-                width: '100%'
+                width: '100%',
+                cursor: 'pointer'
               }}
               symbolLayout={{
                 "text-field": "{place}",
@@ -200,7 +232,8 @@ export class HomePage extends React.PureComponent { // eslint-disable-line react
                   >
                     <Feature
                       coordinates={country.geometry.coordinates}
-                      onClick={this.onCountryClick}
+                      properties={country.properties}
+                      onClick={this.onMapCountryClick.bind(this)}
                     />
 
                   </Layer>
@@ -208,19 +241,18 @@ export class HomePage extends React.PureComponent { // eslint-disable-line react
               })
             }
 
-            {
-            selectedCountries[0] && selectedCountries[0].states && selectedCountries[0].states.map((county) => {
-              const countyGeoData = ukCounties.find((c) => c.name === county.name)
+            {ukCounties.map((county) => {
+              const countyIsChecked = this.countryStateIsInSelectedList(county.name);
               return (
                 <Layer
-                  type="fill"
-                  paint={polygonPaintCounty}
-                  key={countyGeoData.name}
+                  type='fill'
+                  paint={countyIsChecked ? polygonPaintCounty : polygonPaintDisabled}
+                  key={county.name}
                 >
                   <Feature
-                    coordinates={countyGeoData.geometry.coordinates[0]}
-                    properties={countyGeoData.properties}
-                    onClick={this.onCountyClick}
+                    coordinates={county.geometry.coordinates[0]}
+                    properties={county.properties}
+                    onClick={this.handleMapOnChangeCountryState.bind(this)}
                   />
 
                 </Layer>
