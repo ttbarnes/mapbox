@@ -1,6 +1,7 @@
 import { UK_COUNTIES_LIST } from './uk-counties-list';
 
 export const COUNTRIES_AND_STATES_EUROPE = [
+  { name: "United Kingdom", states: UK_COUNTIES_LIST },
   { name: "Belgium" },
   { name: "Czech Republic"},
   { name: "Bosnia and Herzegovina"},
@@ -15,7 +16,6 @@ export const COUNTRIES_AND_STATES_EUROPE = [
   { name: "Estonia"},
   { name: "Finland"},
   { name: "France"},
-  { name: "United Kingdom", states: UK_COUNTIES_LIST },
   { name: "Greece"},
   { name: "Croatia"},
   { name: "Hungary"},

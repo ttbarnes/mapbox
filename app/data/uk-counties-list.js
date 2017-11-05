@@ -1,6 +1,6 @@
 export const UK_COUNTIES_LIST = [
-  'Central Bedfordshire',
-  'Essex',
-  'Kent',
-  'Surrey'
+  { name: 'Central Bedfordshire' },
+  { name: 'Essex' },
+  { name: 'Kent' },
+  { name: 'Surrey'}
 ];

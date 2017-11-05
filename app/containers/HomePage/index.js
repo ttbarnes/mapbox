@@ -36,7 +36,7 @@ const polygonPaint = {
 };
 
 const polygonPaintCounty = {
-  'fill-color': '#000',
+  'fill-color': '#536c05',
   'fill-opacity': 1
 };
 
@@ -67,33 +67,51 @@ export class HomePage extends React.PureComponent { // eslint-disable-line react
     });
   }
 
-  countryIsInSelectedList = (countryName) => this.state.selectedCountries.includes(countryName);
+  countryIsInSelectedList = (countryName) => this.state.selectedCountries.find((c) => c.name === countryName);
 
-  handleOnChange = (ev) => {
+  countryStateIsInSelectedList = (countryName, stateName) => {
+    const country = this.state.selectedCountries.find((c) => countryName === countryName);
+    const countryStateIsSelected = country.states && country.states.includes(stateName);
+    return countryStateIsSelected;
+  }
+
+  handleOnChangeCountry = (ev) => {
     const { name, checked } = ev.target;
 
     this.props.onSelectCountry(name);
 
     const selectedCountries = this.state.selectedCountries;
 
-    const createNewCountryObj = (name, checked) => {
-      return {
-        name: name,
-        selected: true
-      };
-    }
+    const newSelectedCountry = [{
+      name,
+      states: []
+    }];
+    this.setState({
+      selectedCountries: [...this.state.selectedCountries, ...newSelectedCountry]
+    });
+  }
 
-    if (checked === true) {
-      const newSelectedCountries = [name];
-      this.setState({
-        selectedCountries: [...this.state.selectedCountries, ...newSelectedCountries]
-      });
-    } else {
-      const newSelectedCountries = this.state.selectedCountries.filter(e => e !== name);
-      this.setState({
-        selectedCountries: [...newSelectedCountries]
-      });
-    }
+  handleOnChangeCountryState(ev) {
+    const { name, checked, attributes } = ev.target;
+    const countryName = attributes['data-country-name'].value;
+    const _stateName = name;
+    const selectedCountries = this.state.selectedCountries;
+    const countiesCountry = selectedCountries.find((c) => c.name === countryName);
+    const newState = [
+      {
+        name: _stateName
+      }
+    ];
+    const newStatesObj = [
+      ...countiesCountry.states,
+      ...newState
+    ];
+
+    countiesCountry.states = newStatesObj;
+    const selectedCountriesWithoutNewCountry = this.state.selectedCountries.filter((c) => c.name !== countiesCountry.name);
+    this.setState({
+      selectedCountries: [...selectedCountriesWithoutNewCountry, countiesCountry ]
+    });
   }
 
   selectedCountriesWithGeo() {
@@ -106,14 +124,16 @@ export class HomePage extends React.PureComponent { // eslint-disable-line react
     return result;
   }
 
-  doClickStuff = (ev) => this.changeCenter(ev.lngLat);
+  onCountryClick = (ev) => this.changeCenter(ev.lngLat);
 
-  onCountyClick = (ev) => console.log('----clicked on the county ', ev.feature.properties.name);
+  onCountyClick = (ev) => {
+    const stateName = ev.feature.properties.name;
+    this.handleOnChangeCountryState(stateName);
+  }
 
   render() {
     const { loading, error, repos, europeData, europeCountriesStatesList, ukCounties } = this.props;
     const { selectedCountries, zoom, center } = this.state;
-
     return (
       <div>
 
@@ -125,17 +145,25 @@ export class HomePage extends React.PureComponent { // eslint-disable-line react
             <p className="filter-label">Countries</p>
             {europeCountriesStatesList.map((c) =>
               <div key={c.name}>
-                <label style={selectedCountries.includes(c.name) ? labelSelectedStyle : {}}>
-                  <input type='checkbox' name={c.name} onChange={this.handleOnChange.bind(this)} /> {c.name}
+                <label style={selectedCountries.find((country) => country.name === c.name) ? labelSelectedStyle : {}}>
+                  <input type='checkbox' name={c.name} onChange={this.handleOnChangeCountry.bind(this)} /> {c.name}
                 </label>
-                {selectedCountries.includes(c.name) &&
+                {selectedCountries.find((country) => country.name === c.name) &&
                   <div style={{ marginLeft: '1em' }}>
-                    {(c.states && c.states.length) && c.states.map((state) =>
-                      <div key={state}>
-                        <label>
-                          <input type='checkbox' name={state} onChange={this.handleOnChange.bind(this)} /> {state}
-                        </label>
-                      </div> 
+                    {(c.states && c.states.length) && c.states.map((state) => {
+                      return (
+                        <div key={`${c.name}-${state.name}`}>
+                          <label>
+                            <input
+                              type='checkbox'
+                              name={state.name}
+                              data-country-name={c.name}
+                              onChange={this.handleOnChangeCountryState.bind(this)}
+                            /> {state.name}
+                          </label>
+                        </div> 
+                      );
+                    }
                     )}
                   </div>
                 }
@@ -161,41 +189,43 @@ export class HomePage extends React.PureComponent { // eslint-disable-line react
             >
             
             {
-            europeData.map((country) => {
-              const countryLongName = country.properties.name_long;
-              const countryIsChecked = this.countryIsInSelectedList(countryLongName);
-              return (
-                <Layer
-                  type="fill"
-                  paint={countryIsChecked ? polygonPaint : polygonPaintDisabled}
-                  key={countryLongName}
-                >
-                  <Feature
-                    coordinates={country.geometry.coordinates}
-                    onClick={this.doClickStuff}
-                  />
+              europeData.map((country) => {
+                const countryLongName = country.properties.name_long;
+                const countryIsChecked = this.countryIsInSelectedList(countryLongName);
+                return (
+                  <Layer
+                    type="fill"
+                    paint={countryIsChecked ? polygonPaint : polygonPaintDisabled}
+                    key={countryLongName}
+                  >
+                    <Feature
+                      coordinates={country.geometry.coordinates}
+                      onClick={this.onCountryClick}
+                    />
 
-                </Layer>
-              )
-            })
-          }
+                  </Layer>
+                )
+              })
+            }
 
-            {ukCounties.map((county) => {
+            {
+            selectedCountries[0] && selectedCountries[0].states && selectedCountries[0].states.map((county) => {
+              const countyGeoData = ukCounties.find((c) => c.name === county.name)
               return (
                 <Layer
                   type="fill"
                   paint={polygonPaintCounty}
-                  key={county.name}
+                  key={countyGeoData.name}
                 >
                   <Feature
-                    coordinates={county.geometry.coordinates[0]}
-                    properties={county.properties}
+                    coordinates={countyGeoData.geometry.coordinates[0]}
+                    properties={countyGeoData.properties}
                     onClick={this.onCountyClick}
                   />
 
                 </Layer>
-              )
-            })}
+              )}
+            )}
 
             </Map>
           </div>
