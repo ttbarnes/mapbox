@@ -7,6 +7,7 @@ import { LOCATION_CHANGE } from 'react-router-redux';
 
 import globalReducer from 'containers/App/reducer';
 
+
 /*
  * routeReducer
  *
