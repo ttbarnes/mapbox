@@ -173,6 +173,31 @@ injectGlobal`
   .mapboxgl-popup-anchor-bottom-right .mapboxgl-popup-content {
       border-bottom-right-radius: 0;
   }
-  
+
+
+  select {
+      border: solid 2px #CCC;
+      padding: 1em;
+      margin-bottom: 2em;
+  },
+
+  ul,
+  li {
+      margin: 0;
+      padding: 0;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5 {
+      margin-top: 0;
+      margin-bottom: 0.5em;
+  }
+
+  p {
+      margin:0 0 0.25em 0;
+  }
 
 `;

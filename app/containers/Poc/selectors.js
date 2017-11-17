@@ -3,7 +3,7 @@ import { createSelector } from 'reselect';
 /**
  * Direct selector to the poc state domain
  */
-const selectPocDomain = (state) => state && state.poc;
+const selectPoc = (state) => state && state.poc;
 
 /**
  * Other specific selectors
@@ -14,12 +14,13 @@ const selectPocDomain = (state) => state && state.poc;
  * Default selector used by Poc
  */
 
-const makeSelectPoc = () => createSelector(
-  selectPocDomain,
-  (substate) => substate
+const selectPocPlaces = () => createSelector(
+  selectPoc,
+  (poc) => poc.places
 );
 
-export default makeSelectPoc;
+export default selectPocPlaces;
+
 export {
-  selectPocDomain,
+  selectPoc
 };
