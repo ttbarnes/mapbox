@@ -6,6 +6,7 @@
 import {
   FETCH_LOADING,
   FETCH_SUCCESS,
+  FETCH_DIRECTIONS_SUCCESS,
   DEFAULT_ACTION
 } from './constants';
 
@@ -28,6 +29,14 @@ export function success(data) {
   };
 }
 
+export function directionsSuccess(data) {
+  return {
+    type: FETCH_DIRECTIONS_SUCCESS,
+    data
+  };
+}
+
+
 const placeApiCall = (placeName) => {
   const endpoint = `https://api.foursquare.com/v2/venues/explore?client_id=X3K2GZS2YT2W3PIYND3ZJBFXODRVSFXRW0PQ1ZK2MYNKRI0K&client_secret=IED4LLCEO5AR1WHYHKN13TCF33040HYNESJ5C0XPX2M21AMD&v=20170801&limit=10&near=${placeName}&section=sights`;
   return endpoint;
@@ -45,3 +54,19 @@ export function getPlaces(placeName) {
       });
   };
 }
+
+const directionsApiCall = (cords) => {
+  const endpoint = `https://api.mapbox.com/directions/v5/mapbox/cycling/${cords}?geometries=geojson&access_token=pk.eyJ1IjoidHRiYXJuZXMiLCJhIjoiY2o5aG96czd3MzVkcjMzcHlmN3Y2dHA4ZyJ9.3YyzhYPeosdM3D8C4JxmiQ`;
+  return endpoint;
+};
+
+export function getDirections(placeName) {
+  return (dispatch) => {
+    getData(directionsApiCall(placeName))
+      .then((res) => res.json())
+      .then((data) => {
+        dispatch(directionsSuccess(data));
+      });
+  };
+}
+

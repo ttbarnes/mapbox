@@ -14,13 +14,12 @@ const selectPoc = (state) => state && state.poc;
  * Default selector used by Poc
  */
 
-const selectPocPlaces = () => createSelector(
+export const selectPocPlaces = () => createSelector(
   selectPoc,
   (poc) => poc.places
 );
 
-export default selectPocPlaces;
-
-export {
-  selectPoc
-};
+export const selectPocDirections = () => createSelector(
+  selectPoc,
+  (poc) => poc.directions
+);

@@ -6,7 +6,6 @@
 
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Helmet } from 'react-helmet';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
 import { createStructuredSelector } from 'reselect';
@@ -26,30 +25,17 @@ import ReactMapboxGl, { Layer, Feature } from 'react-mapbox-gl';
 import { countrySelected } from './actions';
 import reducer from './reducer';
 import saga from './saga';
+import { mapboxAccessToken } from '../../config';
+import {
+  polygonPaint,
+  polygonPaintDisabled,
+  polygonPaintCounty
+} from '../../styles';
 
-const accessToken = 'pk.eyJ1IjoidHRiYXJuZXMiLCJhIjoiY2o5aG96czd3MzVkcjMzcHlmN3Y2dHA4ZyJ9.3YyzhYPeosdM3D8C4JxmiQ';
-const Map = ReactMapboxGl({ accessToken });
+
+const Map = ReactMapboxGl({ accessToken: mapboxAccessToken });
 const ZOOM_INIT = 3.5;
 const ZOOM_COUNTRY = 4;
-
-const polygonPaint = {
-  'fill-color': '#bcda2c',
-  'fill-opacity': 0.7
-};
-
-const polygonPaintCounty = {
-  'fill-color': '#536c05',
-  'fill-opacity': 1
-};
-
-const polygonPaintDisabled = {
-  'fill-opacity': 0
-};
-
-const labelSelectedStyle = {
-  fontWeight: 'bold'
-}
-
 
 export class HomePage extends React.PureComponent { // eslint-disable-line react/prefer-stateless-function
 

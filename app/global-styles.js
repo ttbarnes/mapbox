@@ -199,5 +199,10 @@ injectGlobal`
   p {
       margin:0 0 0.25em 0;
   }
+  button {
+      background: #BADA55;
+      float: right;
+      max-width: 180px;
+  }
 
 `;

@@ -5,11 +5,13 @@
  */
 import {
   FETCH_LOADING,
-  FETCH_SUCCESS
+  FETCH_SUCCESS,
+  FETCH_DIRECTIONS_SUCCESS
 } from './constants';
 
 const initialState = {
-  places: []
+  places: [],
+  directions: {}
 };
 
 function pocReducer(state = initialState, action) {
@@ -17,12 +19,15 @@ function pocReducer(state = initialState, action) {
     case FETCH_LOADING:
       return state;
     case FETCH_SUCCESS:
-      return Object.assign(
-        {},
-        {
-          places: action.data
-        }
-      );
+      return {
+        ...state,
+        places: action.data
+      };
+    case FETCH_DIRECTIONS_SUCCESS:
+      return {
+        ...state,
+        directions: action.data
+      };
     default:
       return state;
   }
