@@ -11,7 +11,7 @@ import {
 
 const initialState = {
   places: [],
-  directions: {}
+  directions: []
 };
 
 function pocReducer(state = initialState, action) {
@@ -26,7 +26,7 @@ function pocReducer(state = initialState, action) {
     case FETCH_DIRECTIONS_SUCCESS:
       return {
         ...state,
-        directions: action.data
+        directions: [...state.directions, action.data]
       };
     default:
       return state;

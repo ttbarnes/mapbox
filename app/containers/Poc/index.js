@@ -14,7 +14,7 @@ import ReactMapboxGl, { Layer, Feature } from 'react-mapbox-gl';
 import injectReducer from 'utils/injectReducer';
 import { selectPocPlaces, selectPocDirections } from './selectors';
 import reducer from './reducer';
-import { getPlaces, getDirections } from './actions';
+import { getPlaces, getDirections, getAllDirections } from './actions';
 import { mapboxAccessToken } from '../../config';
 
 import {
@@ -22,7 +22,10 @@ import {
   liStyle,
   selectedForPlanStyles,
   lineLayout,
-  linePaint
+  linePaint,
+  directionsRowStyle,
+  directionsColFirstStyle,
+  directionsColLastStyle
 } from '../../styles';
 
 const Map = ReactMapboxGl({ accessToken: mapboxAccessToken });
@@ -57,25 +60,41 @@ export class Poc extends React.Component { // eslint-disable-line react/prefer-s
       placesForPlan: this.state.placesForPlan,
       selectedLocation: this.state.selectedLocation
     });
-    const aLng = this.state.placesForPlan[0].venue.location.lng;
-    const aLat = this.state.placesForPlan[0].venue.location.lat;
 
-    const bLng = this.state.placesForPlan[1].venue.location.lng;
-    const bLat = this.state.placesForPlan[1].venue.location.lat;
+    const directionsArr = [];
 
-    const directionsStart = `${aLng},${aLat}`;
-    const directionsEnd = `${bLng},${bLat}`;
-    const directions = `${directionsStart};${directionsEnd}`;
+    const placesForPlan = this.state.placesForPlan;
 
-    this.props.onGetDirections(directions);
+    const getLngLat = (place) => {
+      const { lng, lat } = place.venue.location;
+      return `${lng},${lat}`;
+    };
+
+    placesForPlan.reduce((previousPlace, currentPlace) => {
+      const prevLngLatFormat = getLngLat(previousPlace);
+      const currLngLatFormat = getLngLat(currentPlace);
+      const lngLatFormat = `${prevLngLatFormat};${currLngLatFormat}`;
+      const directionsObj = {
+        prevName: previousPlace.venue.name,
+        currentName: currentPlace.venue.name,
+        lngLat: lngLatFormat
+      };
+      directionsArr.push(directionsObj);
+      return currentPlace;
+    });
+
+    directionsArr.map((d) => this.props.onGetAllDirections(d));
   }
+
+  minutesValue(str) {
+    return str.toFixed();
+  }
+
 
   render() {
     const tempPlaces = ['Belgium', 'London', 'Israel', 'Paris'];
     const { places, directions } = this.props;
     const { step, selectedLocation, placesForPlan } = this.state;
-    const tempDurationMins = (directions && directions.routes) && directions.routes[0].duration / 60;
-    const tempDuration = tempDurationMins && tempDurationMins.toFixed();
 
     return (
       <div style={pocContainerSyles}>
@@ -125,45 +144,36 @@ export class Poc extends React.Component { // eslint-disable-line react/prefer-s
         : null}
 
         {step === 2 &&
-          <div>
-            {placesForPlan.length && <div>
-              <p>1) <b>{placesForPlan[0].venue.name}</b> to <b>{placesForPlan[1].venue.name}</b> (cycling)</p>
-              {(directions && directions.routes && directions && directions.routes[0]) &&
-                <p>{tempDuration} mins</p>
-              }
-            </div>}
+          <div className="directions-container">
+            {directions.length && directions.map((d, i) => (
+              <div key={d.directionsData.uuid} style={directionsRowStyle}>
+                <div style={directionsColFirstStyle}>
+                  <h3>Step {i + 1}: {d.prevName} to {d.currentName}</h3>
+                  <p>{this.minutesValue(d.directionsData.routes[0].duration / 60)} mins</p>
+                </div>
+                <div style={directionsColLastStyle}>
+                  <Map
+                    style="mapbox://styles/mapbox/streets-v9"
+                    zoom="9"
+                    containerStyle={{
+                      height: '200px',
+                      width: '300px'
+                    }}
+                  >
+                    <Layer
+                      type="line"
+                      layout={lineLayout}
+                      paint={linePaint}
+                    >
+                      <Feature
+                        coordinates={d.directionsData.routes[0].geometry.coordinates}
+                      />
 
-            <Map
-              style='mapbox://styles/mapbox/streets-v9'
-              zoom='9'
-              containerStyle={{
-                height: '400px',
-                width: '400px'
-              }}
-            >
-
-              {(directions && directions.routes && directions.routes[0]) &&
-                <Layer
-                  type="line"
-                  layout={lineLayout}
-                  paint={linePaint}
-                >
-                  <Feature
-                    coordinates={directions.routes[0].geometry.coordinates}
-                  />
-
-                </Layer>
-              }
-            </Map>
-
-            {placesForPlan.length &&
-              <div>
-                <br /><br /><br /><br />
-                <p>2) X to Y...</p>
-                <br /><br /><br />
+                    </Layer>
+                  </Map>
+                </div>
               </div>
-            }
-
+            ))}
           </div>
         }
 
@@ -173,11 +183,10 @@ export class Poc extends React.Component { // eslint-disable-line react/prefer-s
 }
 
 Poc.propTypes = {
-  // dispatch: PropTypes.func.isRequired,
   onGetSomePlaces: PropTypes.func.isRequired,
-  onGetDirections: PropTypes.func.isRequired,
+  onGetAllDirections: PropTypes.func.isRequired,
   places: PropTypes.array,
-  directions: PropTypes.object
+  directions: PropTypes.array
 };
 
 const mapStateToProps = createStructuredSelector({
@@ -187,9 +196,9 @@ const mapStateToProps = createStructuredSelector({
 
 function mapDispatchToProps(dispatch) {
   return {
-    // dispatch,
     onGetSomePlaces: (place) => dispatch(getPlaces(place)),
-    onGetDirections: (cords) => dispatch(getDirections(cords))
+    onGetDirections: (cords) => dispatch(getDirections(cords)),
+    onGetAllDirections: (cords) => dispatch(getAllDirections(cords))
   };
 }
 

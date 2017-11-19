@@ -1,6 +1,7 @@
 export const pocContainerSyles = {
   paddingTop: '4em',
-  maxWidth: '800px',
+  maxWidth: '700px',
+  width: '100%',
   margin: '0 auto',
   textAlign: 'center'
 };
@@ -50,4 +51,20 @@ export const polygonPaintDisabled = {
 
 export const labelSelectedStyle = {
   fontWeight: 'bold'
-}
+};
+
+export const directionsRowStyle = {
+  display: 'flex',
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  marginBottom: '2em'
+};
+
+export const directionsColFirstStyle = {
+  textAlign: 'left',
+  padding: '1em'
+};
+
+export const directionsColLastStyle = {
+  textAlign: 'right'
+};

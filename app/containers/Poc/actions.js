@@ -60,9 +60,9 @@ const directionsApiCall = (cords) => {
   return endpoint;
 };
 
-export function getDirections(placeName) {
+export function getDirections(placeCoords) {
   return (dispatch) => {
-    getData(directionsApiCall(placeName))
+    getData(directionsApiCall(placeCoords))
       .then((res) => res.json())
       .then((data) => {
         dispatch(directionsSuccess(data));
@@ -70,3 +70,18 @@ export function getDirections(placeName) {
   };
 }
 
+export function getAllDirections(place) {
+  return (dispatch) => {
+    dispatch(loading());
+    getData(directionsApiCall(place.lngLat))
+      .then((res) => res.json())
+      .then((data) => {
+        const placeWithDirectionsObj = {
+          prevName: place.prevName,
+          currentName: place.currentName,
+          directionsData: data
+        };
+        dispatch(directionsSuccess(placeWithDirectionsObj));
+      });
+  };
+}

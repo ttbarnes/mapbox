@@ -205,4 +205,8 @@ injectGlobal`
       max-width: 180px;
   }
 
+  .directions-container > div:nth-child(even) {
+      background: #F3F3F3;
+  }
+
 `;
