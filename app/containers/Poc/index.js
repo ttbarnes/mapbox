@@ -10,6 +10,7 @@ import { connect } from 'react-redux';
 import { createStructuredSelector } from 'reselect';
 import { compose } from 'redux';
 import ReactMapboxGl, { Layer, Feature } from 'react-mapbox-gl';
+import moment from 'moment';
 
 import injectReducer from 'utils/injectReducer';
 import { selectPocPlaces, selectPocDirections } from './selectors';
@@ -90,11 +91,34 @@ export class Poc extends React.Component { // eslint-disable-line react/prefer-s
     return str.toFixed();
   }
 
+  getTotalTimeInMins() {
+    const directions = this.props.directions;
+    const directionsLength = directions && directions.length;
+    let totalEstimatedTime = 0;
+    if (directionsLength) {
+      return directions.reduce((prev, current, i) => {
+        const previousDuration = (prev.directionsData.routes[0].duration / 60);
+        const currentDuration = (current.directionsData.routes[0].duration / 60);
+
+        const prevCurrentDuration = Number(previousDuration.toFixed()) + Number(currentDuration.toFixed());
+        if (i === directionsLength - 1) {
+          totalEstimatedTime = prevCurrentDuration + totalEstimatedTime;
+          return totalEstimatedTime;
+        }
+        totalEstimatedTime = Number(currentDuration.toFixed()) + totalEstimatedTime;
+        return prev;
+      });
+    }
+    return undefined;
+  }
 
   render() {
     const tempPlaces = ['Belgium', 'London', 'Israel', 'Paris'];
     const { places, directions } = this.props;
     const { step, selectedLocation, placesForPlan } = this.state;
+
+    const totalTimeInMins = this.getTotalTimeInMins();
+    const totalTimeInHours = moment.duration(totalTimeInMins, 'minutes').asHours();
 
     return (
       <div style={pocContainerSyles}>
@@ -118,7 +142,7 @@ export class Poc extends React.Component { // eslint-disable-line react/prefer-s
                       <h3>{p.venue.name}</h3>
                       <p><small>{p.venue.stats.checkinsCount} people have checked in here</small></p>
                       <p><small>{p.venue.hereNow.count} people are there right now.</small></p>
-                      <p><a href={p.venue.url}><small>Find out more</small></a></p>
+                      {p.venue.url && <p><a href={p.venue.url}><small>Find out more</small></a></p>}
                       <button onClick={() => this.addToPlan(p)}>Add to plan</button>
                     </div>
                   </li>
@@ -128,6 +152,8 @@ export class Poc extends React.Component { // eslint-disable-line react/prefer-s
 
           </div>
         }
+
+        {totalTimeInHours ? <p style={{ textAlign: 'left' }}><small>Total time: {totalTimeInHours} hours</small></p> : null}
 
         {placesForPlan.length ?
           <div style={selectedForPlanStyles}>
@@ -145,35 +171,37 @@ export class Poc extends React.Component { // eslint-disable-line react/prefer-s
 
         {step === 2 &&
           <div className="directions-container">
-            {directions.length && directions.map((d, i) => (
-              <div key={d.directionsData.uuid} style={directionsRowStyle}>
-                <div style={directionsColFirstStyle}>
-                  <h3>Step {i + 1}: {d.prevName} to {d.currentName}</h3>
-                  <p>{this.minutesValue(d.directionsData.routes[0].duration / 60)} mins</p>
-                </div>
-                <div style={directionsColLastStyle}>
-                  <Map
-                    style="mapbox://styles/mapbox/streets-v9"
-                    zoom="9"
-                    containerStyle={{
-                      height: '200px',
-                      width: '300px'
-                    }}
-                  >
-                    <Layer
-                      type="line"
-                      layout={lineLayout}
-                      paint={linePaint}
+            {directions.length ? (
+              directions.map((d, i) => (
+                <div key={d.directionsData.uuid} style={directionsRowStyle}>
+                  <div style={directionsColFirstStyle}>
+                    <h3>Step {i + 1}: {d.prevName} to {d.currentName}</h3>
+                    <p>{this.minutesValue(d.directionsData.routes[0].duration / 60)} mins</p>
+                  </div>
+                  <div style={directionsColLastStyle}>
+                    <Map
+                      style="mapbox://styles/mapbox/streets-v9"
+                      fitBounds={d.directionsData.routes[0].geometry.coordinates}
+                      containerStyle={{
+                        height: '200px',
+                        width: '300px'
+                      }}
                     >
-                      <Feature
-                        coordinates={d.directionsData.routes[0].geometry.coordinates}
-                      />
+                      <Layer
+                        type="line"
+                        layout={lineLayout}
+                        paint={linePaint}
+                      >
+                        <Feature
+                          coordinates={d.directionsData.routes[0].geometry.coordinates}
+                        />
 
-                    </Layer>
-                  </Map>
+                      </Layer>
+                    </Map>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))
+            ) : undefined}
           </div>
         }
 
